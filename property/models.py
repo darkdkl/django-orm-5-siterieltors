@@ -5,7 +5,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 
 class Flat(models.Model):
-    
+
     created_at = models.DateTimeField(
         "Когда создано объявление", default=timezone.now, db_index=True)
 
@@ -31,14 +31,14 @@ class Flat(models.Model):
     construction_year = models.IntegerField(
         "Год постройки здания", null=True, blank=True, db_index=True)
     new_building = models.NullBooleanField("Новостройка", db_index=True)
-    liked_by = models.ManyToManyField(User, related_name="liked_flat",blank=True)
+    liked_by = models.ManyToManyField(
+        User, related_name="liked_flats", blank=True)
 
     def __str__(self):
         return f"{self.town}, {self.address} ({self.price}р.)"
+
     def get_owners(self):
-        owners=[]
-        for owner in self.owners.all():
-            owners.append(owner.owner)
+        owners = [owner.owner for owner in self.owners.all()]
         return f'{",".join(owners)}'
 
     class Meta:
@@ -49,7 +49,7 @@ class Flat(models.Model):
 class Abuse(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name='Кто жаловался')
-    flat = models.ForeignKey(Flat, on_delete=models.CASCADE,
+    flat = models.ForeignKey(Flat, related_name='flats_abuses',on_delete=models.CASCADE,
                              verbose_name='Квартира на которую пожаловались')
     text = models.TextField(verbose_name='Текст жалобы', max_length=200)
 
@@ -62,17 +62,17 @@ class Abuse(models.Model):
 
 
 class Owner(models.Model):
-    owner = models.CharField("ФИО владельца", max_length=200, blank=True,db_index=True)
+    owner = models.CharField(
+        "ФИО владельца", max_length=200, blank=True, db_index=True)
     owners_phonenumber = models.CharField(
-        "Номер владельца", max_length=20, blank=True,db_index=True)
+        "Номер владельца", max_length=20, blank=True, db_index=True)
     owner_phone_pure = PhoneNumberField(
-        "Нормализованный номер владельца", blank=True,db_index=True)
-    flats = models.ManyToManyField(Flat, related_name='owners')
+        "Нормализованный номер владельца", blank=True, db_index=True)
+    flats = models.ManyToManyField(Flat, related_name='owners', blank=True)
 
     def __str__(self):
         return f'{self.owner},{self.flats.all()}'
 
-  
     class Meta:
         verbose_name = 'Клиент'
         verbose_name_plural = 'Клиенты'
